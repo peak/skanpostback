@@ -1,0 +1,11 @@
+# github.com/google/certificate-transparency-go v1.1.1 => github.com/peak/certificate-transparency-go v0.0.0-p192
+## explicit
+github.com/google/certificate-transparency-go/asn1
+github.com/google/certificate-transparency-go/tls
+github.com/google/certificate-transparency-go/x509
+github.com/google/certificate-transparency-go/x509/pkix
+# golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+golang.org/x/crypto/cryptobyte
+golang.org/x/crypto/cryptobyte/asn1
+golang.org/x/crypto/ed25519
+golang.org/x/crypto/ed25519/internal/edwards25519
