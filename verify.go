@@ -26,7 +26,7 @@ const (
 func Verify(data []byte) error {
 	var pb map[string]interface{}
 	if err := json.Unmarshal(data, &pb); err != nil {
-		return fmt.Errorf("unmarshal: %w", err)
+		return fmt.Errorf("unmarshal json: %w", err)
 	}
 
 	attributionSignature, ok := pb["attribution-signature"].(string)
