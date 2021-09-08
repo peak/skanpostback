@@ -6,7 +6,6 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -15,28 +14,29 @@ import (
 	gx509 "github.com/google/certificate-transparency-go/x509"
 )
 
-const applePublicKey = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWdp8GPcGqmhgzEFj9Z2nSpQVddayaPe4FMzqM9wib1+aHaaIzoHoLN9zW4K8y4SPykE3YVK3sVqW6Af0lfx3gg=="
-const applePublicKeyLegacy = "MEkwEwYHKoZIzj0CAQYIKoZIzj0DAQEDMgAEMyHD625uvsmGq4C43cQ9BnfN2xslVT5V1nOmAMP6qaRRUll3PB1JYmgSm+62sosG"
-const sep = "\u2063"
+const (
+	applePublicKey       = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWdp8GPcGqmhgzEFj9Z2nSpQVddayaPe4FMzqM9wib1+aHaaIzoHoLN9zW4K8y4SPykE3YVK3sVqW6Af0lfx3gg=="
+	applePublicKeyLegacy = "MEkwEwYHKoZIzj0CAQYIKoZIzj0DAQEDMgAEMyHD625uvsmGq4C43cQ9BnfN2xslVT5V1nOmAMP6qaRRUll3PB1JYmgSm+62sosG"
 
-var ErrNotValid = errors.New("not valid")
+	sep = "\u2063"
+)
 
 // Verify checks `attribution-signature` according to Apple combining parameters rules.
 // https://developer.apple.com/documentation/storekit/skadnetwork/verifying_an_install-validation_postback
 func Verify(data []byte) error {
 	var pb map[string]interface{}
 	if err := json.Unmarshal(data, &pb); err != nil {
-		return fmt.Errorf("%w: could not unmarshal skadnetwork postback data. %v (%s)", ErrNotValid, err, data)
+		return fmt.Errorf("unmarshal json: %w", err)
 	}
 
 	attributionSignature, ok := pb["attribution-signature"].(string)
 	if !ok {
-		return fmt.Errorf("%w: could not find attribution-signature key", ErrNotValid)
+		return fmt.Errorf("missing 'attribution-signature' key")
 	}
 
 	decodedSignature, err := base64.StdEncoding.DecodeString(attributionSignature)
 	if err != nil {
-		return fmt.Errorf("%w: could not decode attribution-signature key", ErrNotValid)
+		return fmt.Errorf("base64 decode: %w", err)
 	}
 
 	var publicKey string
@@ -53,12 +53,12 @@ func Verify(data []byte) error {
 
 	decodedKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
-		return fmt.Errorf("%w: could not decode public key: %v", ErrNotValid, err)
+		return fmt.Errorf("decode public key: %w", err)
 	}
 
 	pub, err := gx509.ParsePKIXPublicKey(decodedKey)
 	if err != nil {
-		return fmt.Errorf("%w: could not parse public key: %v", ErrNotValid, err)
+		return fmt.Errorf("parse public key: %w", err)
 	}
 
 	hash := sha256.Sum256(signature(pb))
@@ -68,14 +68,14 @@ func Verify(data []byte) error {
 	}
 
 	if _, err := asn1.Unmarshal(decodedSignature, &esig); err != nil {
-		return fmt.Errorf("%w: could not asn1 unmarshal: %v", ErrNotValid, err)
+		return fmt.Errorf("unmarshal asn1: %w", err)
 	}
 
-	if ecdsa.Verify(pub.(*ecdsa.PublicKey), hash[:], esig.R, esig.S) {
-		return nil
+	if !ecdsa.Verify(pub.(*ecdsa.PublicKey), hash[:], esig.R, esig.S) {
+		return fmt.Errorf("signature not valid")
 	}
 
-	return ErrNotValid
+	return nil
 }
 
 // signature combines parameters with separator and returns signature.
@@ -83,10 +83,8 @@ func signature(pb map[string]interface{}) []byte {
 	var params []string
 
 	version, ok := pb["version"].(string)
-	if ok {
-		if version != "1.0" {
-			params = append(params, version)
-		}
+	if ok && version != "1.0" {
+		params = append(params, version)
 	}
 
 	adNetworkId, ok := pb["ad-network-id"].(string)
