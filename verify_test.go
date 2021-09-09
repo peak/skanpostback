@@ -5,6 +5,18 @@ import (
 )
 
 func TestVerify(t *testing.T) {
+	validPostbackV10 := []byte(`
+{
+  "ad-network-id": "su67r6k2v3.skadnetwork",
+  "app-id": 1176027022,
+  "attribution-signature": "MDMCGELMEaJCS0y1JXqjZujcMXdJel8boLV6PAIXFNKYjzROJY2CxAmU+HoPQfTJCyjoS6k=",
+  "campaign-id": 51,
+  "redownload": false,
+  "transaction-id": "583e867c-0bc5-4980-8766-6d8cf992f24a",
+  "version": "1.0"
+}
+`)
+
 	validPostbackV20 := []byte(`
 {
   "ad-network-id": "v9wttpbfk9.skadnetwork",
@@ -111,6 +123,11 @@ func TestVerify(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name:    "valid postback (v1.0)",
+			data:    validPostbackV10,
+			wantErr: false,
+		},
+		{
 			name:    "valid postback (v2.0)",
 			data:    validPostbackV20,
 			wantErr: false,
@@ -152,7 +169,7 @@ func TestVerify(t *testing.T) {
 			err := Verify(tc.data)
 
 			if gotErr := err != nil; gotErr != tc.wantErr {
-				t.Errorf("Run() gotErr = %v, wantErr %v", gotErr, tc.wantErr)
+				t.Errorf("Run() gotErr = %v, wantErr %v, err: %v", gotErr, tc.wantErr, err)
 			}
 		})
 	}

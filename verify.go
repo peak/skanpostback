@@ -108,7 +108,7 @@ func signature(pb map[string]interface{}) []byte {
 	}
 
 	redownload, ok := pb["redownload"].(bool)
-	if ok {
+	if ok && version != "1.0" {
 		params = append(params, strconv.FormatBool(redownload))
 	}
 
