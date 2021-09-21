@@ -198,7 +198,7 @@ func TestVerify_Errors(t *testing.T) {
 			err:  ErrBadData,
 		},
 		{
-			name: "invalid signature (missing fields)",
+			name: "invalid postback (missing fields)",
 			data: []byte(`{"attribution-signature": "MDMCGELMEaJCS0y1JXqjZujcMXdJel8boLV6PAIXFNKYjzROJY2CxAmU+HoPQfTJCyjoS6k=","version": "1.0"}`),
 			err:  ErrInvalidData,
 		},
