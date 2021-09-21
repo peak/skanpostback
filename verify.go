@@ -40,7 +40,7 @@ func Verify(data []byte) error {
 
 	decodedSignature, err := base64.StdEncoding.DecodeString(attributionSignature)
 	if err != nil {
-		return fmt.Errorf("%w: base64 decode: %v", ErrBadData, err)
+		return fmt.Errorf("%w: signature base64 decode: %v", ErrBadData, err)
 	}
 
 	var publicKey string
