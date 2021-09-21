@@ -23,7 +23,7 @@ const (
 )
 
 var ErrBadData = errors.New("malformed postback data")
-var ErrInvalidData = errors.New("invalid postback data")
+var ErrSignatureMismatch = errors.New("signature mismatch")
 
 // Verify checks `attribution-signature` according to Apple combining parameters rules.
 // https://developer.apple.com/documentation/storekit/skadnetwork/verifying_an_install-validation_postback
@@ -76,7 +76,7 @@ func Verify(data []byte) error {
 	}
 
 	if !ecdsa.Verify(pub.(*ecdsa.PublicKey), hash[:], esig.R, esig.S) {
-		return fmt.Errorf("%w: signature not valid", ErrInvalidData)
+		return ErrSignatureMismatch
 	}
 
 	return nil
