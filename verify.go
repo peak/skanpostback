@@ -57,12 +57,12 @@ func Verify(data []byte) error {
 
 	decodedKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
-		return fmt.Errorf("%w: decode public key: %v", ErrBadData, err)
+		return fmt.Errorf("decode public key: %w", err)
 	}
 
 	pub, err := gx509.ParsePKIXPublicKey(decodedKey)
 	if err != nil {
-		return fmt.Errorf("%w: parse public key: %v", ErrBadData, err)
+		return fmt.Errorf("parse public key: %w", err)
 	}
 
 	hash := sha256.Sum256(signature(pb))
@@ -72,7 +72,7 @@ func Verify(data []byte) error {
 	}
 
 	if _, err := asn1.Unmarshal(decodedSignature, &esig); err != nil {
-		return fmt.Errorf("%w: unmarshal asn1: %v", ErrBadData, err)
+		return fmt.Errorf("%w: signature asn1 unmarshal: %v", ErrBadData, err)
 	}
 
 	if !ecdsa.Verify(pub.(*ecdsa.PublicKey), hash[:], esig.R, esig.S) {
