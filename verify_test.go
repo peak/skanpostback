@@ -176,22 +176,31 @@ func TestVerify(t *testing.T) {
 	}
 }
 
-func TestVerify_BadData(t *testing.T) {
+func TestVerify_Errors(t *testing.T) {
 	tt := []struct {
 		name string
 		data []byte
+		err  error
 	}{
 		{
 			name: "invalid json",
 			data: []byte("hi"),
+			err:  ErrBadData,
 		},
 		{
 			name: "missing 'attribution-signature' json key",
 			data: []byte(`{"my-name"":"john"}`),
+			err:  ErrBadData,
 		},
 		{
 			name: "malformed signature",
 			data: []byte(`{"attribution-signature"":"i_should_be_base64_decoded_string"}`),
+			err:  ErrBadData,
+		},
+		{
+			name: "invalid signature (missing fields)",
+			data: []byte(`{"attribution-signature": "MDMCGELMEaJCS0y1JXqjZujcMXdJel8boLV6PAIXFNKYjzROJY2CxAmU+HoPQfTJCyjoS6k=","version": "1.0"}`),
+			err:  ErrInvalidData,
 		},
 	}
 
@@ -199,8 +208,8 @@ func TestVerify_BadData(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := Verify(tc.data)
 
-			if !errors.Is(err, ErrBadData) {
-				t.Errorf("Verify() should return ErrBadData but got %v", err)
+			if !errors.Is(err, tc.err) {
+				t.Errorf("Verify() should return %v, got %v", tc.err, err)
 			}
 		})
 	}
