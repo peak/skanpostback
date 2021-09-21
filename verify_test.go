@@ -1,6 +1,7 @@
 package skanpostback
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -169,7 +170,37 @@ func TestVerify(t *testing.T) {
 			err := Verify(tc.data)
 
 			if gotErr := err != nil; gotErr != tc.wantErr {
-				t.Errorf("Run() gotErr = %v, wantErr %v, err: %v", gotErr, tc.wantErr, err)
+				t.Errorf("Verify() gotErr = %v, wantErr %v, err: %v", gotErr, tc.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestVerify_BadData(t *testing.T) {
+	tt := []struct {
+		name string
+		data []byte
+	}{
+		{
+			name: "invalid json",
+			data: []byte("hi"),
+		},
+		{
+			name: "missing 'attribution-signature' json key",
+			data: []byte(`{"my-name"":"john"}`),
+		},
+		{
+			name: "malformed signature",
+			data: []byte(`{"attribution-signature"":"i_should_be_base64_decoded_string"}`),
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			err := Verify(tc.data)
+
+			if !errors.Is(err, ErrBadData) {
+				t.Errorf("Verify() should return ErrBadData but got %v", err)
 			}
 		})
 	}

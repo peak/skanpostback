@@ -6,6 +6,7 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -21,22 +22,25 @@ const (
 	sep = "\u2063"
 )
 
+var ErrBadData = errors.New("malformed postback data")
+var ErrInvalidData = errors.New("invalid postback data")
+
 // Verify checks `attribution-signature` according to Apple combining parameters rules.
 // https://developer.apple.com/documentation/storekit/skadnetwork/verifying_an_install-validation_postback
 func Verify(data []byte) error {
 	var pb map[string]interface{}
 	if err := json.Unmarshal(data, &pb); err != nil {
-		return fmt.Errorf("unmarshal json: %w", err)
+		return fmt.Errorf("%w: unmarshal json: %v", ErrBadData, err)
 	}
 
 	attributionSignature, ok := pb["attribution-signature"].(string)
 	if !ok {
-		return fmt.Errorf("missing 'attribution-signature' key")
+		return fmt.Errorf("%w: missing 'attribution-signature' key", ErrBadData)
 	}
 
 	decodedSignature, err := base64.StdEncoding.DecodeString(attributionSignature)
 	if err != nil {
-		return fmt.Errorf("base64 decode: %w", err)
+		return fmt.Errorf("%w: base64 decode: %v", ErrBadData, err)
 	}
 
 	var publicKey string
@@ -53,12 +57,12 @@ func Verify(data []byte) error {
 
 	decodedKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
-		return fmt.Errorf("decode public key: %w", err)
+		return fmt.Errorf("%w: decode public key: %v", ErrBadData, err)
 	}
 
 	pub, err := gx509.ParsePKIXPublicKey(decodedKey)
 	if err != nil {
-		return fmt.Errorf("parse public key: %w", err)
+		return fmt.Errorf("%w: parse public key: %v", ErrBadData, err)
 	}
 
 	hash := sha256.Sum256(signature(pb))
@@ -68,11 +72,11 @@ func Verify(data []byte) error {
 	}
 
 	if _, err := asn1.Unmarshal(decodedSignature, &esig); err != nil {
-		return fmt.Errorf("unmarshal asn1: %w", err)
+		return fmt.Errorf("%w: unmarshal asn1: %v", ErrBadData, err)
 	}
 
 	if !ecdsa.Verify(pub.(*ecdsa.PublicKey), hash[:], esig.R, esig.S) {
-		return fmt.Errorf("signature not valid")
+		return fmt.Errorf("%w: signature not valid", ErrInvalidData)
 	}
 
 	return nil
