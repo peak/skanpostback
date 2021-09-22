@@ -1,6 +1,7 @@
 package skanpostback
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -169,7 +170,46 @@ func TestVerify(t *testing.T) {
 			err := Verify(tc.data)
 
 			if gotErr := err != nil; gotErr != tc.wantErr {
-				t.Errorf("Run() gotErr = %v, wantErr %v, err: %v", gotErr, tc.wantErr, err)
+				t.Errorf("Verify() gotErr = %v, wantErr %v, err: %v", gotErr, tc.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestVerify_Errors(t *testing.T) {
+	tt := []struct {
+		name string
+		data []byte
+		err  error
+	}{
+		{
+			name: "invalid json",
+			data: []byte("hi"),
+			err:  ErrBadData,
+		},
+		{
+			name: "missing 'attribution-signature' json key",
+			data: []byte(`{"my-name"":"john"}`),
+			err:  ErrBadData,
+		},
+		{
+			name: "malformed signature",
+			data: []byte(`{"attribution-signature"":"i_should_be_base64_decoded_string"}`),
+			err:  ErrBadData,
+		},
+		{
+			name: "invalid postback (missing fields)",
+			data: []byte(`{"attribution-signature": "MDMCGELMEaJCS0y1JXqjZujcMXdJel8boLV6PAIXFNKYjzROJY2CxAmU+HoPQfTJCyjoS6k=","version": "1.0"}`),
+			err:  ErrSignatureMismatch,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			err := Verify(tc.data)
+
+			if !errors.Is(err, tc.err) {
+				t.Errorf("Verify() should return %v, got %v", tc.err, err)
 			}
 		})
 	}
