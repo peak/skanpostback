@@ -57,5 +57,5 @@ jobs:
         go-version: ${{ matrix.go-version }}
 
     - run: go vet ./...
-    - run: go get honnef.co/go/tools/cmd/staticcheck
+    - run: go install honnef.co/go/tools/cmd/staticcheck@v0.3.3
     - run: staticcheck ./...
