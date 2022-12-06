@@ -74,6 +74,40 @@ func TestVerify(t *testing.T) {
 }
 `)
 
+	validPostbackV40 := []byte(`
+{
+	"version": "4.0",
+	"ad-network-id": "com.example",
+	"source-identifier": "5239",
+	"app-id": 525463029,
+	"transaction-id": "6aafb7a5-0170-41b5-bbe4-fe71dedf1e30",
+	"redownload": false,
+	"source-domain": "example.com", 
+	"fidelity-type": 1, 
+	"did-win": true,
+	"conversion-value": 63,
+	"postback-sequence-index": 0,
+	"attribution-signature": "MEUCIGRmSMrqedNu6uaHyhVcifs118R5z/AB6cvRaKrRRHWRAiEAv96ne3dKQ5kJpbsfk4eYiePmrZUU6sQmo+7zfP/1Bxo="
+}
+`)
+
+	validPostbackV40Alternative := []byte(`
+{
+	"version": "4.0",
+	"ad-network-id": "com.example",
+	"source-identifier": "39",
+	"app-id": 525463029,
+	"transaction-id": "6aafb7a5-0170-41b5-bbe4-fe71dedf1e31",
+	"redownload": false,
+	"source-domain": "example.com", 
+	"fidelity-type": 1, 
+	"did-win": true,
+	"coarse-conversion-value": "high",
+	"postback-sequence-index": 0,
+	"attribution-signature": "MEUCIQD4rX6eh38qEhuUKHdap345UbmlzA7KEZ1bhWZuYM8MJwIgMnyiiZe6heabDkGwOaKBYrUXQhKtF3P/ERHqkR/XpuA="
+}
+`)
+
 	invalidPostback := []byte(`
 {
 	"version": "3.0",
@@ -146,6 +180,16 @@ func TestVerify(t *testing.T) {
 		{
 			name:    "valid postback (v3.0)",
 			data:    validPostbackV30,
+			wantErr: false,
+		},
+		{
+			name:    "valid postback (v4.0)",
+			data:    validPostbackV40,
+			wantErr: false,
+		},
+		{
+			name:    "valid postback (v4.0 alternative)",
+			data:    validPostbackV40Alternative,
 			wantErr: false,
 		},
 		{

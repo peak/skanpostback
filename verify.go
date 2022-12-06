@@ -96,6 +96,11 @@ func signature(pb map[string]interface{}) []byte {
 		params = append(params, adNetworkId)
 	}
 
+	sourceIdentifier, ok := pb["source-identifier"].(string)
+	if ok {
+		params = append(params, sourceIdentifier)
+	}
+
 	campaignId, ok := pb["campaign-id"].(float64)
 	if ok {
 		params = append(params, fmt.Sprintf("%d", int(campaignId)))
@@ -121,6 +126,11 @@ func signature(pb map[string]interface{}) []byte {
 		params = append(params, fmt.Sprintf("%d", int(sourceAppId)))
 	}
 
+	sourceDomain, ok := pb["source-domain"].(string)
+	if ok {
+		params = append(params, sourceDomain)
+	}
+
 	fidelityType, ok := pb["fidelity-type"].(float64)
 	if ok {
 		params = append(params, fmt.Sprintf("%d", int(fidelityType)))
@@ -129,6 +139,11 @@ func signature(pb map[string]interface{}) []byte {
 	didWin, ok := pb["did-win"].(bool)
 	if ok {
 		params = append(params, strconv.FormatBool(didWin))
+	}
+
+	postbackSequenceIndex, ok := pb["postback-sequence-index"].(float64)
+	if ok {
+		params = append(params, fmt.Sprintf("%d", int(postbackSequenceIndex)))
 	}
 
 	sig := strings.Join(params, sep)
